@@ -110,7 +110,7 @@ tk.Label(root, text="Atendido:").grid(row=5, column=0, sticky="e", padx=10, pady
 check = tk.Checkbutton(root, text="Sim", variable=var_atendido)
 check.grid(row=5, column=1, sticky="w", padx=10, pady=10)
 
-btncadastrar = tk.Button(root, text="Cadastrar", command=cadastrar, width=20, bg="#4CAF50", fg="white")
+btncadastrar = tk.Button(root, text="Cadastrar", command=cadastrar, width=20, bg="#green", fg="white")
 btncadastrar.grid(row=6, column=0, columnspan=4, pady=30)
 
 root.mainloop()
