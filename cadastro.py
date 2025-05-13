@@ -9,6 +9,8 @@ conexao = mysql.connector.connect(
     database="gerenciamento"
 )
 x = conexao.cursor()
+#x.execute('create database gerenciamento')
+#x.execute('use gerenciamento')
 
 x.execute("""
 CREATE TABLE IF NOT EXISTS pessoas (
@@ -17,6 +19,7 @@ CREATE TABLE IF NOT EXISTS pessoas (
     cpf VARCHAR(14),
     celular VARCHAR(15),
     responsavel VARCHAR(50),
+    endereco VARCHAR(100),
     frequencia VARCHAR(20),
     escolaridade VARCHAR(50),
     atendido VARCHAR(10),
@@ -49,6 +52,7 @@ def cadastrar():
     cpf = entry_cpf.get()
     celular = entry_celular.get()
     responsavel = entry_responsavel.get()
+    endereco = entry_endereco.get()
     frequencia = entry_frequencia.get()
     escolaridade = entry_escolaridade.get()
     restricao = entry_restricao.get()
@@ -56,7 +60,7 @@ def cadastrar():
     sexo = entry_sexo.get()
     atendido = "Sim" if var_atendido.get() == 1 else "Não"
 
-    if not all([nome, cpf, celular, responsavel, frequencia, escolaridade, restricao, encarregado, sexo]):
+    if not all([nome, cpf, celular, responsavel, endereco, frequencia, escolaridade, restricao, encarregado, sexo]):
         messagebox.showwarning("Campos obrigatórios", "Preencha todos os campos.")
         return
 
@@ -65,9 +69,9 @@ def cadastrar():
 
     x.execute("""
         INSERT INTO pessoas (
-            nome, cpf, celular, responsavel, frequencia, escolaridade, atendido, restricao, encarregado, sexo
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """, (nome, cpf, celular, responsavel, frequencia, escolaridade, atendido, restricao, encarregado, sexo))
+            nome, cpf, celular, responsavel, endereco, frequencia, escolaridade, atendido, restricao, encarregado, sexo
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, (nome, cpf, celular, responsavel, endereco, frequencia, escolaridade, atendido, restricao, encarregado, sexo))
     conexao.commit()
 
     messagebox.showinfo("Sucesso", "Cadastro realizado com sucesso!")
@@ -75,6 +79,7 @@ def cadastrar():
     entry_cpf.delete(0, tk.END)
     entry_celular.delete(0, tk.END)
     entry_responsavel.delete(0, tk.END)
+    entry_endereco.delete(0, tk.END)
     entry_frequencia.delete(0, tk.END)
     entry_escolaridade.delete(0, tk.END)
     entry_restricao.delete(0, tk.END)
@@ -89,9 +94,9 @@ root.geometry("800x350")
 labels = [
     "Nome", "CPF",
     "Celular", "Responsável",
-    "Frequência", "Escolaridade",
-    "Restrição", "Acompanhado por",
-    "Sexo"
+    "Endereço", "Frequência",
+    "Escolaridade", "Restrição",
+    "Acompanhado por", "Sexo"
 ]
 entradas = []
 
@@ -103,7 +108,7 @@ for i, label_text in enumerate(labels):
     entry.grid(row=row, column=col + 1, sticky="w", padx=10, pady=10)
     entradas.append(entry)
 
-entry_nome, entry_cpf, entry_celular, entry_responsavel, entry_frequencia, entry_escolaridade, entry_restricao, entry_encarregado, entry_sexo = entradas
+entry_nome, entry_cpf, entry_celular, entry_responsavel, entry_endereco, entry_frequencia, entry_escolaridade, entry_restricao, entry_encarregado, entry_sexo = entradas
 
 var_atendido = tk.IntVar()
 tk.Label(root, text="Atendido:").grid(row=5, column=0, sticky="e", padx=10, pady=10)
