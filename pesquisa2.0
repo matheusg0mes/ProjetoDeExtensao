@@ -1,0 +1,60 @@
+import tkinter as tk
+from tkinter import messagebox
+import mysql.connector
+
+conexao = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="",
+    database="gerenciamento"
+)
+x = conexao.cursor()
+
+def validar_cpf(cpf):
+    if len(cpf) != 14 or cpf[3] != '.' or cpf[7] != '.' or cpf[11] != '-':
+        messagebox.showerror("CPF inválido", "O CPF deve ser digitado no modelo 000.000.000-00.")
+        return False
+    cpf_numeros = ''.join(c for c in cpf if c.isdigit())
+    if len(cpf_numeros) != 11 or cpf_numeros == cpf_numeros[0] * 11:
+        messagebox.showerror("CPF inválido", "Digite novamente!")
+        return False
+    soma1 = sum(int(cpf_numeros[i]) * (10 - i) for i in range(9))
+    digito1 = (soma1 * 10 % 11) % 10
+    soma2 = sum(int(cpf_numeros[i]) * (11 - i) for i in range(10))
+    digito2 = (soma2 * 10 % 11) % 10
+    if digito1 != int(cpf_numeros[9]) or digito2 != int(cpf_numeros[10]):
+        messagebox.showerror("CPF inválido", "Digite novamente!")
+        return False
+    return True
+porta = tk.Tk()
+porta.title("Buscar Paciente")
+porta.geometry("700x600")
+
+resultado_frame = tk.Frame(porta)
+resultado_frame.place(x=20, y=120)
+
+def avaliar():
+    cpf = e_pesquisa.get()
+    if not validar_cpf(cpf):
+        return
+
+    x.execute("SELECT * FROM pessoas WHERE cpf = %s", (cpf,))
+    result = x.fetchall()
+
+    if not result:
+        messagebox.showinfo("Erro", "Paciente não encontrado")
+        return
+
+    campos = ["ID", "Nome", "CPF", "Celular", "Responsável", "Endereço","Frequência", "Escolaridade", "Atendido", "Restrição","Acompanhado por", "Sexo"]
+
+    for i, valor in enumerate(result[0]):
+        tk.Label(resultado_frame, text=f"{campos[i]}:", anchor="e", width=20, font=("Arial", 10, "bold")).grid(row=i, column=0, padx=5, pady=5, sticky="e")
+        tk.Label(resultado_frame, text=str(valor), anchor="w", width=50).grid(row=i, column=1, padx=5, pady=5, sticky="w")
+
+
+tk.Label(porta, text="CPF").place(x=230, y=30)
+e_pesquisa = tk.Entry(porta, width=25)
+e_pesquisa.place(x=270, y=30)
+tk.Button(porta, text="Buscar", command=avaliar, bg="blue", fg="white", width=15).place(x=280, y=70)
+
+porta.mainloop()
