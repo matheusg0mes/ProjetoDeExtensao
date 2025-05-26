@@ -1,5 +1,5 @@
-import tkinter as tk
-from tkinter import messagebox
+import customtkinter as tk
+from tkinter import messagebox, PhotoImage
 import mysql.connector
 
 conexao = mysql.connector.connect(
@@ -87,35 +87,42 @@ def cadastrar():
     entry_sexo.delete(0, tk.END)
     var_atendido.set(0)
 
-root = tk.Tk()
+tk.set_appearance_mode("light")
+tema = ["light"]
+def temanovo():
+    novotema = "dark" if tema[0] == "light" else "light"
+    tk.set_appearance_mode(novotema)
+    tema[0] = novotema
+
+root = tk.CTk()
 root.title("Cadastro de Pessoa")
 root.geometry("800x350")
 
-labels = [
-    "Nome", "CPF",
-    "Celular", "Responsável",
-    "Endereço", "Frequência",
-    "Escolaridade", "Restrição",
-    "Acompanhado por", "Sexo"
-]
+labels = ["Nome", "CPF","Celular", "Responsável","Endereço", "Frequência","Escolaridade", "Restrição","Acompanhado por", "Sexo"]
 entradas = []
 
 for i, label_text in enumerate(labels):
     row = i // 2
     col = (i % 2) * 2
-    tk.Label(root, text=label_text + ":").grid(row=row, column=col, sticky="e", padx=10, pady=10)
-    entry = tk.Entry(root, width=30)
+    tk.CTkLabel(root, text=label_text + ":").grid(row=row, column=col, sticky="e", padx=10, pady=10)
+    entry = tk.CTkEntry(root, width=250)
     entry.grid(row=row, column=col + 1, sticky="w", padx=10, pady=10)
     entradas.append(entry)
 
 entry_nome, entry_cpf, entry_celular, entry_responsavel, entry_endereco, entry_frequencia, entry_escolaridade, entry_restricao, entry_encarregado, entry_sexo = entradas
 
 var_atendido = tk.IntVar()
-tk.Label(root, text="Atendido:").grid(row=5, column=0, sticky="e", padx=10, pady=10)
-check = tk.Checkbutton(root, text="Sim", variable=var_atendido)
+tk.CTkLabel(root, text="Atendido:").grid(row=5, column=0, sticky="e", padx=10, pady=10)
+check = tk.CTkCheckBox(root, text="Sim", variable=var_atendido)
 check.grid(row=5, column=1, sticky="w", padx=10, pady=10)
 
-btncadastrar = tk.Button(root, text="Cadastrar", command=cadastrar, width=20, bg="green", fg="white")
-btncadastrar.grid(row=6, column=0, columnspan=4, pady=30)
+
+imgbotao = PhotoImage(file="images (2).png")
+btntema = tk.CTkButton(root, text="Alterar Tema",command=temanovo)
+btntema.grid(row=6, column=0,padx=10,pady=30)
+
+
+btncadastrar = tk.CTkButton(root, text="Cadastrar", command=cadastrar, width=250, fg_color="green", text_color="white")
+btncadastrar.grid(row=6, column=0, columnspan=5, pady=30)
 
 root.mainloop()
