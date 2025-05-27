@@ -1,5 +1,5 @@
 import customtkinter as tk
-from tkinter import messagebox, PhotoImage
+from tkinter import messagebox
 import mysql.connector
 
 conexao = mysql.connector.connect(
@@ -16,7 +16,6 @@ def temanovo():
     novotema = "dark" if tema[0] == "light" else "light"
     tk.set_appearance_mode(novotema)
     tema[0] = novotema
-
 
 def validar_cpf(cpf):
     if len(cpf) != 14 or cpf[3] != '.' or cpf[7] != '.' or cpf[11] != '-':
@@ -35,22 +34,43 @@ def validar_cpf(cpf):
         return False
     return True
 
-porta = tk.CTk()
-porta.title("Buscar Paciente")
-porta.geometry("700x600")
+def sair_tela_cheia(event=None):
+    porta.attributes('-fullscreen', False)
 
-resultado_frame = tk.CTkFrame(porta)
-resultado_frame.place(x=250, y=120)
+porta = tk.CTk()
+porta.attributes('-fullscreen', True)
+porta.bind("<Escape>", sair_tela_cheia)
+porta.title("Buscar Paciente")
+
+titulo_principal = tk.CTkLabel(porta,text="Buscar Pacientes",font=("Arial", 28, "bold"))
+titulo_principal.pack(pady=(170, 50))
+
+frame_central = tk.CTkFrame(porta)
+frame_central.place(relx=0.5, rely=0.5, anchor='center')
+
+tk.CTkLabel(frame_central, text="CPF", font=("Arial", 14)).grid(row=0, column=0, padx=10, pady=10, sticky='e')
+e_pesquisa = tk.CTkEntry(frame_central, width=250, font=("Arial", 14))
+e_pesquisa.grid(row=0, column=1, padx=10, pady=10)
+
+btn_buscar = tk.CTkButton(frame_central, text="Buscar", command=lambda: buscar())
+btn_buscar.grid(row=1, column=0, columnspan=2, pady=(0,20))
+
+resultado_frame = tk.CTkFrame(frame_central)
+resultado_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=10)
+
+btntema = tk.CTkButton(frame_central, text="Alterar Tema", command=temanovo)
+btntema.grid(row=3, column=0, columnspan=2, pady=20)
 
 def buscar():
     cpf = e_pesquisa.get()
     if not validar_cpf(cpf):
         return
-    tk.set_appearance_mode("light")
-    tema = ["light"]
 
     x.execute("SELECT * FROM pessoas WHERE cpf = %s", (cpf,))
     result = x.fetchall()
+
+    for widget in resultado_frame.winfo_children():
+        widget.destroy()
 
     if not result:
         messagebox.showinfo("Erro", "Paciente não encontrado")
@@ -59,16 +79,7 @@ def buscar():
     campos = ["ID", "Nome", "CPF", "Celular", "Responsável", "Endereço","Frequência", "Escolaridade", "Atendido", "Restrição","Acompanhado por", "Sexo"]
 
     for i, valor in enumerate(result[0]):
-        tk.CTkLabel(resultado_frame, text=f"{campos[i]}:", anchor="e", width=20, font=("Arial", 10, "bold")).grid(row=i, column=0, padx=5, pady=5, sticky="e")
-        tk.CTkLabel(resultado_frame, text=str(valor), anchor="w", width=50).grid(row=i, column=1, padx=5, pady=5, sticky="w")
-
-tk.CTkLabel(porta, text="CPF").place(x=230, y=30)
-e_pesquisa = tk.CTkEntry(porta, width=200)
-e_pesquisa.place(x=270, y=30)
-tk.CTkButton(porta, text="Buscar", command=buscar, width=100).place(x=310, y=70)
-
-btntema = tk.CTkButton(porta, text="Alterar Tema",command=temanovo)
-btntema.grid(row=6, column=0,padx=10,pady=30)
-btntema.place(x=10, y=560)
+        tk.CTkLabel(resultado_frame, text=f"{campos[i]}:", anchor="e", width=20, font=("Arial", 12, "bold")).grid(row=i, column=0, padx=5, pady=3, sticky="e")
+        tk.CTkLabel(resultado_frame, text=str(valor), anchor="w", width=50, font=("Arial", 12)).grid(row=i, column=1, padx=5, pady=3, sticky="w")
 
 porta.mainloop()
