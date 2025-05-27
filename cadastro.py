@@ -75,16 +75,8 @@ def cadastrar():
     conexao.commit()
 
     messagebox.showinfo("Sucesso", "Cadastro realizado com sucesso!")
-    entry_nome.delete(0, tk.END)
-    entry_cpf.delete(0, tk.END)
-    entry_celular.delete(0, tk.END)
-    entry_responsavel.delete(0, tk.END)
-    entry_endereco.delete(0, tk.END)
-    entry_frequencia.delete(0, tk.END)
-    entry_escolaridade.delete(0, tk.END)
-    entry_restricao.delete(0, tk.END)
-    entry_encarregado.delete(0, tk.END)
-    entry_sexo.delete(0, tk.END)
+    for entry in entradas:
+        entry.delete(0, tk.END)
     var_atendido.set(0)
 
 tk.set_appearance_mode("light")
@@ -94,35 +86,45 @@ def temanovo():
     tk.set_appearance_mode(novotema)
     tema[0] = novotema
 
+def sair_tela_cheia(event=None):
+    root.attributes('-fullscreen', False)
+
 root = tk.CTk()
+root.attributes('-fullscreen', True)
+root.bind("<Escape>", sair_tela_cheia)
 root.title("Cadastro de Pessoa")
-root.geometry("800x350")
+
+frame_central = tk.CTkFrame(root)
+frame_central.place(relx=0.5, rely=0.5, anchor='center')
 
 labels = ["Nome", "CPF","Celular", "Responsável","Endereço", "Frequência","Escolaridade", "Restrição","Acompanhado por", "Sexo"]
 entradas = []
 
+titulo_principal = tk.CTkLabel(root,text="Cadastro de Pacientes",font=("Arial", 28, "bold"))
+titulo_principal.pack(pady=(200, 50))
+
+frame_central = tk.CTkFrame(root)
+frame_central.place(relx=0.5, rely=0.5, anchor='center')
+
 for i, label_text in enumerate(labels):
     row = i // 2
     col = (i % 2) * 2
-    tk.CTkLabel(root, text=label_text + ":").grid(row=row, column=col, sticky="e", padx=10, pady=10)
-    entry = tk.CTkEntry(root, width=250)
+    tk.CTkLabel(frame_central, text=label_text + ":").grid(row=row, column=col, sticky="e", padx=10, pady=10)
+    entry = tk.CTkEntry(frame_central, width=700, font=("Arial", 14))  # Aumentado aqui
     entry.grid(row=row, column=col + 1, sticky="w", padx=10, pady=10)
     entradas.append(entry)
 
 entry_nome, entry_cpf, entry_celular, entry_responsavel, entry_endereco, entry_frequencia, entry_escolaridade, entry_restricao, entry_encarregado, entry_sexo = entradas
 
 var_atendido = tk.IntVar()
-tk.CTkLabel(root, text="Atendido:").grid(row=5, column=0, sticky="e", padx=10, pady=10)
-check = tk.CTkCheckBox(root, text="Sim", variable=var_atendido)
+tk.CTkLabel(frame_central, text="Atendido:").grid(row=5, column=0, sticky="e", padx=10, pady=10)
+check = tk.CTkCheckBox(frame_central, text="Sim", variable=var_atendido)
 check.grid(row=5, column=1, sticky="w", padx=10, pady=10)
 
+btntema = tk.CTkButton(frame_central, text="Alterar Tema", command=temanovo)
+btntema.grid(row=6, column=0, padx=10, pady=30)
 
-imgbotao = PhotoImage(file="images (2).png")
-btntema = tk.CTkButton(root, text="Alterar Tema",command=temanovo)
-btntema.grid(row=6, column=0,padx=10,pady=30)
-
-
-btncadastrar = tk.CTkButton(root, text="Cadastrar", command=cadastrar, width=250, fg_color="green", text_color="white")
-btncadastrar.grid(row=6, column=0, columnspan=5, pady=30)
+btncadastrar = tk.CTkButton(frame_central, text="Cadastrar", command=cadastrar, width=250, fg_color="green", text_color="white")
+btncadastrar.grid(row=6, column=0, columnspan=4, pady=30)
 
 root.mainloop()
