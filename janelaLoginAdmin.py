@@ -43,7 +43,7 @@ class LoginAdministrativo(ctk.CTkFrame):
         self.botaoVoltar = ctk.CTkButton(self.frameLogin, text="Voltar", text_color="white", font=('Arial', 20), fg_color='#B22222', hover_color='#B22222', command=self.voltar_principal)
         self.botaoVoltar.grid(row=5, column=0, padx=20, pady=(0,10))
 
-    def validar_login_func(self):
+    def validar_login_admin(self):
         usuario = self.e_login.get()
         senha = self.e_senha.get()
 
@@ -51,7 +51,7 @@ class LoginAdministrativo(ctk.CTkFrame):
             messagebox.showerror("Erro!", "Login ou senha não podem estar vazios.")
             return
 
-        if usuario == modulo_login.usuarioFunc and senha == modulo_login.senhaFunc:
+        if usuario == modulo_login.usuarioAdministrativo and senha == modulo_login.senhaAdministrativo:
             messagebox.showinfo("Sucesso!", "Login feito com sucesso.")
             self.controller.mostrar_frame()
             self.e_login.delete(0, ctk.END)
