@@ -85,12 +85,17 @@ def temanovo():
     novotema = "dark" if tema[0] == "light" else "light"
     tk.set_appearance_mode(novotema)
     tema[0] = novotema
+    if novotema == "dark":
+        btntema.configure(text="\U0001F319")
+    else:
+        btntema.configure(text="\u2600")
 
 def sair_tela_cheia(event=None):
     root.attributes('-fullscreen', False)
 
 root = tk.CTk()
-root.attributes('-fullscreen', True)
+root.wm_iconbitmap('favicon.ico')
+root.geometry(f"{root.winfo_screenwidth()}x{root.winfo_screenheight()}+0+0")
 root.bind("<Escape>", sair_tela_cheia)
 root.title("Cadastro de Pessoa")
 
@@ -121,7 +126,7 @@ tk.CTkLabel(frame_central, text="Atendido:").grid(row=5, column=0, sticky="e", p
 check = tk.CTkCheckBox(frame_central, text="Sim", variable=var_atendido)
 check.grid(row=5, column=1, sticky="w", padx=10, pady=10)
 
-btntema = tk.CTkButton(frame_central, text="Alterar Tema", command=temanovo)
+btntema = tk.CTkButton(frame_central, text="\u2600", command=temanovo)
 btntema.grid(row=6, column=0, padx=10, pady=30)
 
 btncadastrar = tk.CTkButton(frame_central, text="Cadastrar", command=cadastrar, width=250, fg_color="green", text_color="white")
