@@ -126,30 +126,63 @@ class TelaGerenciamento(ctk.CTkFrame):
     def abrir_menu_cadastro(self):
         self.controller.mostrar_frame()
 
-class BarraDePesquisa():
+class BarraDePesquisa(ctk.CTkFrame):
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, **kwargs)
 
-    barra_pesquisa = CTkEntry(TelaGerenciamento.frame_topo, placeholder_text="Pesquise por CPF", text_color="black")
-    barra_pesquisa.bind('<ENTER>', pesquisar)
+        self.historico_pesquisa = []
 
-    lista_pessoas = []
-    combobox_pessoas = CTkComboBox(TelaGerenciamento.frame_topo)
+        # Entry de pesquisa
+        self.entry_pesquisa = ctk.CTkEntry(self, placeholder_text="Pesquise por CPF", width=200)
+        self.entry_pesquisa.grid(row=0, column=0, padx=10, pady=5, sticky="w")
 
-    def pesquisar(self, barra_pesquisa):
-        pesquisa = barra_pesquisa.get()
+        # Combobox inicialmente escondida
+        self.combobox_resultado = ctk.CTkComboBox(self, values=[], width=200, state="readonly")
+        self.combobox_resultado.grid(row=1, column=0, padx=10, pady=(0,5), sticky="w")
+        self.combobox_resultado.grid_remove()
 
-        try:
-            x.execute("select * from paciente where cpf=%s", pesquisa)
-            resultado = x.fetchall()
+        # Eventos
+        self.entry_pesquisa.bind("<FocusIn>", self.mostrar_combobox)
+        self.entry_pesquisa.bind("<FocusOut>", self.esconder_combobox)
+        self.entry_pesquisa.bind("<KeyRelease>", self.atualizar_sugestoes)
 
-            if resultado:
-                self.adicionar_combobox(resultado)
+    def mostrar_combobox(self, event=None):
+        self.combobox_resultado.grid()
+
+    def esconder_combobox(self, event=None):
+        self.after(200, self.combobox_resultado.grid_remove)
+
+    def atualizar_sugestoes(self, event=None):
+        texto = self.entry_pesquisa.get()
+
+        if texto:
+            try:
+                query = "SELECT cpf, nome FROM paciente WHERE cpf LIKE %s"
+                x.execute(query, (f'{texto}%',))
+                resultados = x.fetchall()
+
+                sugestoes = [f"{cpf} - {nome}" for cpf, nome in resultados]
+
+                for item in self.historico_pesquisa:
+                    if texto in item and item not in sugestoes:
+                        sugestoes.append(item)
+
+                if sugestoes:
+                    self.combobox_resultado.configure(values=sugestoes)
+                    self.mostrar_combobox()
+                else:
+                    self.combobox_resultado.configure(values=["Nenhum resultado encontrado"])
+
+            except Exception as e:
+                messagebox.showerror("Erro", f"Erro na busca: {e}")
+
+        else:
+            if self.historico_pesquisa:
+                self.combobox_resultado.configure(values=self.historico_pesquisa)
+                self.mostrar_combobox()
             else:
-                messagebox.showinfo("Resultado", "Nenhum paciente encontrado com esse CPF")
+                self.esconder_combobox()
 
-        except Exception as e:
-            messagebox.showerror("Erro!", "Não foi possível realizar a busca.")
-
-    def adicionar_combobox(self, resultado):
-
-        for pessoa in resultado:
-            self.combobox_pessoas.add(pessoa[1])
+    def adicionar_no_historico(self, cpf_nome):
+        if cpf_nome not in self.historico_pesquisa:
+            self.historico_pesquisa.append(cpf_nome)
