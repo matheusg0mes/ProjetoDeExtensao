@@ -115,7 +115,7 @@ for i, label_text in enumerate(labels):
     row = i // 2
     col = (i % 2) * 2
     tk.CTkLabel(frame_central, text=label_text + ":").grid(row=row, column=col, sticky="e", padx=10, pady=10)
-    entry = tk.CTkEntry(frame_central, width=700, font=("Arial", 14))  # Aumentado aqui
+    entry = tk.CTkEntry(frame_central, width=400, font=("Arial", 14)) 
     entry.grid(row=row, column=col + 1, sticky="w", padx=10, pady=10)
     entradas.append(entry)
 
