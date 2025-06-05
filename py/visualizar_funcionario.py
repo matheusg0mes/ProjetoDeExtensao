@@ -8,6 +8,27 @@ class JanelaVisualizarFuncionarios:
         self.frame = ctk.CTkFrame(parent)
         self.frame.pack(expand=True, fill="both")
 
+        # === INÍCIO: área de busca por CPF (ADICIONADO) ===
+        self.busca_frame = ctk.CTkFrame(self.frame, fg_color="transparent")
+        self.busca_frame.pack(fill="x", padx=20, pady=(10, 0))
+
+        self.cpf_var = StringVar()
+        self.entrada_cpf = ctk.CTkEntry(
+            self.busca_frame,
+            placeholder_text="Digite o CPF do funcionário (000.000.000-00)",
+            textvariable=self.cpf_var,
+            width=300
+        )
+        self.entrada_cpf.pack(side="left", padx=(0, 10))
+
+        self.botao_buscar = ctk.CTkButton(
+            self.busca_frame,
+            text="Buscar",
+            command=self.buscar_funcionario_por_cpf
+        )
+        self.botao_buscar.pack(side="left")
+        # === FIM: área de busca ===
+
         self.scrollable_frame = ctk.CTkScrollableFrame(
             self.frame, width=1100, height=500, corner_radius=10
         )
@@ -153,3 +174,55 @@ class JanelaVisualizarFuncionarios:
         btn_salvar = ctk.CTkButton(janela, text="Salvar", command=salvar_alteracoes)
         btn_salvar.grid(row=len(labels), column=0, columnspan=2, pady=20, padx=20, sticky="ew")
 
+    # === MÉTODO NOVO: busca funcionário por CPF e abre janela de detalhes ===
+    def buscar_funcionario_por_cpf(self):
+        cpf = self.cpf_var.get().strip()
+        if not cpf:
+            messagebox.showwarning("CPF vazio", "Por favor, digite um CPF.")
+            return
+
+        try:
+            conn, cursor = conectar_mysql()
+            cursor.execute("SELECT cpf, nome, cargo, telefone, email, data_admissao FROM funcionarios WHERE cpf = %s", (cpf,))
+            funcionario = cursor.fetchone()
+            conn.close()
+
+            if not funcionario:
+                messagebox.showinfo("Não encontrado", f"Nenhum funcionário com o CPF {cpf} foi encontrado.")
+                return
+
+            self.exibir_detalhes_funcionario(funcionario)
+
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao buscar funcionário: {e}")
+
+    # === MÉTODO NOVO: exibe janela modal com os detalhes do funcionário ===
+    def exibir_detalhes_funcionario(self, funcionario):
+        janela = Toplevel(self.parent)
+        janela.title(f"Detalhes do Funcionário - CPF: {funcionario[0]}")
+        janela.geometry("600x400")
+        janela.grab_set()
+
+        frame = ctk.CTkScrollableFrame(janela, width=580, height=380)
+        frame.pack(padx=10, pady=10, fill="both", expand=True)
+
+        labels = ["CPF", "Nome", "Cargo", "Telefone", "Email", "Data de Admissão"]
+
+        # Título centralizado
+        ctk.CTkLabel(
+            frame, text="📋 Dados do Funcionário", font=("Arial", 20, "bold"),
+            anchor="center", justify="center"
+        ).grid(row=0, column=0, columnspan=2, pady=20, sticky="n")
+
+        for i, texto in enumerate(labels, start=1):
+            # Nome do campo
+            ctk.CTkLabel(
+                frame, text=f"{texto}:", font=("Arial", 14, "bold"),
+                anchor="center", width=200
+            ).grid(row=i, column=0, padx=10, pady=8, sticky="e")
+
+            # Valor do campo
+            ctk.CTkLabel(
+                frame, text=funcionario[i - 1], font=("Arial", 14),
+                anchor="center", width=300
+            ).grid(row=i, column=1, padx=10, pady=8, sticky="w")

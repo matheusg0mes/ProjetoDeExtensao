@@ -6,14 +6,33 @@ class JanelaVisualizarClientes:
     def __init__(self, parent):
         self.parent = parent
         self.frame = ctk.CTkFrame(parent)
-        self.frame.pack(expand=True, fill="both")  # preenche tudo
+        self.frame.pack(expand=True, fill="both")
+
+        self.busca_frame = ctk.CTkFrame(self.frame, fg_color="transparent")
+        self.busca_frame.pack(fill="x", padx=20, pady=(10, 0))
+
+        self.cpf_var = StringVar()
+        self.entrada_cpf = ctk.CTkEntry(
+            self.busca_frame,
+            placeholder_text="Digite o CPF do cliente (000.000.000-00)",
+            textvariable=self.cpf_var,
+            width=300
+        )
+        self.entrada_cpf.pack(side="left", padx=(0, 10))
+
+        self.botao_buscar = ctk.CTkButton(
+            self.busca_frame,
+            text="Buscar",
+            command=self.buscar_cliente_por_cpf
+        )
+        self.botao_buscar.pack(side="left")
 
         self.scrollable_frame = ctk.CTkScrollableFrame(
             self.frame, width=1200, height=500, corner_radius=10
         )
         self.scrollable_frame.pack(padx=20, pady=20, expand=True)
 
-        self.colunas = ["Nome", "CPF", "Celular", "Responsável", "Acompanhado por", "Alterar", "Deletar"]
+        self.colunas = ["Nome", "CPF", "Celular", "Responsável", "Acompanhado por", "", "", ""]
         self.estilos = {
             "header_bg": "#1F6AA5",
             "header_fg": "white",
@@ -27,17 +46,22 @@ class JanelaVisualizarClientes:
 
     def criar_cabecalho(self):
         for i, coluna in enumerate(self.colunas):
-            label = ctk.CTkLabel(
-                self.scrollable_frame, text=coluna, width=150, anchor="center",
-                font=("Arial", 14, "bold"), text_color=self.estilos["header_fg"],
-                fg_color=self.estilos["header_bg"], corner_radius=8
-            )
+            if coluna.strip():
+                label = ctk.CTkLabel(
+                    self.scrollable_frame, text=coluna, width=150, anchor="center",
+                    font=("Arial", 14, "bold"), text_color=self.estilos["header_fg"],
+                    fg_color=self.estilos["header_bg"], corner_radius=8
+                )
+            else:
+                label = ctk.CTkLabel(
+                    self.scrollable_frame, text="", width=150, anchor="center",
+                    font=("Arial", 14), fg_color="transparent"
+                )
             label.grid(row=0, column=i, padx=2, pady=6, sticky="nsew")
 
     def carregar_dados(self):
-        # Limpa os widgets anteriores (se recarregar)
         for widget in self.scrollable_frame.winfo_children():
-            if int(widget.grid_info().get("row", 1)) > 0:  # Remove só linhas de dados
+            if int(widget.grid_info().get("row", 1)) > 0:
                 widget.destroy()
 
         try:
@@ -56,20 +80,24 @@ class JanelaVisualizarClientes:
                         fg_color=cor_fundo, corner_radius=6
                     ).grid(row=idx, column=col, padx=2, pady=4, sticky="nsew")
 
-                # Botão Alterar
-                btn_alterar = ctk.CTkButton(
-                    self.scrollable_frame, text="Alterar", width=80,
-                    command=lambda c=linha[1]: self.abrir_janela_alterar(c)
-                )
-                btn_alterar.grid(row=idx, column=len(self.colunas) - 2, padx=5, pady=4)
+                botoes_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="transparent")
+                botoes_frame.grid(row=idx, column=len(self.colunas) - 3, columnspan=3, sticky="w", padx=0)
 
-                # Botão Deletar
-                btn_deletar = ctk.CTkButton(
-                    self.scrollable_frame, text="Deletar", width=80, fg_color="red",
+                ctk.CTkButton(
+                    botoes_frame, text="Ver", width=55,
+                    command=lambda cpf=linha[1]: self.ver_responsavel_do_cliente(cpf)
+                ).pack(side="left", padx=(0, 4))
+
+                ctk.CTkButton(
+                    botoes_frame, text="Editar", width=55,
+                    command=lambda c=linha[1]: self.abrir_janela_alterar(c)
+                ).pack(side="left", padx=(0, 4))
+
+                ctk.CTkButton(
+                    botoes_frame, text="X", width=35, fg_color="red",
                     hover_color="#cc0000",
                     command=lambda c=linha[1]: self.confirmar_deletar(c)
-                )
-                btn_deletar.grid(row=idx, column=len(self.colunas) - 1, padx=5, pady=4)
+                ).pack(side="left", padx=(0, 4))
 
         except Exception as e:
             erro_label = ctk.CTkLabel(
@@ -78,6 +106,50 @@ class JanelaVisualizarClientes:
                 text_color="red"
             )
             erro_label.grid(row=1, column=0, columnspan=len(self.colunas), pady=10)
+
+
+
+    def ver_responsavel_do_cliente(self, cpf_cliente):
+        try:
+            conn, cursor = conectar_mysql()
+            cursor.execute("SELECT nome, telefone, parentesco FROM responsaveis WHERE cliente_cpf = %s", (cpf_cliente,))
+            dados = cursor.fetchone()
+            conn.close()
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao buscar responsável: {e}")
+            return
+
+        if not dados:
+            messagebox.showinfo("Não encontrado", "Nenhum responsável cadastrado para este cliente.")
+            return
+
+        janela = Toplevel(self.parent)
+        janela.title(f"Responsável do Cliente - CPF: {cpf_cliente}")
+        janela.geometry("500x400")
+        janela.grab_set()
+
+        frame = ctk.CTkScrollableFrame(janela, width=480, height=380)
+        frame.pack(padx=10, pady=10, fill="both", expand=True)
+
+        ctk.CTkLabel(
+            frame, text="👨‍👩‍👧 Dados do Responsável", font=("Arial", 20, "bold"),
+            anchor="center", justify="center"
+        ).grid(row=0, column=0, columnspan=2, pady=20, sticky="n")
+
+        campos = ["Nome", "Telefone", "Parentesco"]
+        for i, campo in enumerate(campos, start=1):
+            ctk.CTkLabel(
+                frame, text=f"{campo}:", font=("Arial", 14, "bold"),
+                anchor="center", width=200
+            ).grid(row=i, column=0, padx=10, pady=10, sticky="e")
+
+            ctk.CTkLabel(
+                frame, text=dados[i - 1], font=("Arial", 14),
+                anchor="center", width=250
+            ).grid(row=i, column=1, padx=10, pady=10, sticky="w")
+
+
+
 
     def confirmar_deletar(self, cpf):
         resposta = messagebox.askyesno("Confirmar exclusão", f"Tem certeza que deseja deletar o cliente com CPF {cpf}?")
@@ -111,7 +183,7 @@ class JanelaVisualizarClientes:
         janela = Toplevel(self.parent)
         janela.title(f"Alterar Cliente - CPF: {cpf}")
         janela.geometry("400x300")
-        janela.grab_set()  # Modal
+        janela.grab_set()
 
         labels = ["Nome", "Celular", "Responsável", "Acompanhado por"]
         vars = {}
@@ -148,3 +220,93 @@ class JanelaVisualizarClientes:
 
         btn_salvar = ctk.CTkButton(janela, text="Salvar", command=salvar_alteracoes)
         btn_salvar.grid(row=len(labels), column=0, columnspan=2, pady=20, padx=20, sticky="ew")
+
+
+
+    def exibir_detalhes_cliente(self, cliente):
+        janela = Toplevel(self.parent)
+        janela.title(f"Detalhes do Cliente - CPF: {cliente[1]}")
+        janela.geometry("600x600")
+        janela.grab_set()
+
+        frame = ctk.CTkScrollableFrame(janela, width=580, height=580)
+        frame.pack(padx=10, pady=10, fill="both", expand=True)
+
+        labels = [
+            "Nome", "CPF", "Celular", "Responsável", "Endereço",
+            "Frequência", "Escolaridade", "Atendido", "Restrição",
+            "Acompanhado por", "Sexo"
+        ]
+
+        ctk.CTkLabel(
+            frame, text="📄 Dados do Cliente", font=("Arial", 20, "bold"),
+            anchor="center", justify="center"
+        ).grid(row=0, column=0, columnspan=2, pady=20, sticky="n")
+
+        for i, campo in enumerate(labels, start=1):
+            ctk.CTkLabel(
+                frame, text=f"{campo}:", font=("Arial", 14, "bold"),
+                anchor="center", width=200
+            ).grid(row=i, column=0, padx=10, pady=8, sticky="e")
+
+            ctk.CTkLabel(
+                frame, text=cliente[i - 1], font=("Arial", 14),
+                anchor="center", width=300
+            ).grid(row=i, column=1, padx=10, pady=8, sticky="w")
+
+        # Adicionar detalhes do responsável
+        try:
+            conn, cursor = conectar_mysql()
+            cursor.execute("SELECT nome, telefone, parentesco FROM responsaveis WHERE cliente_cpf = %s", (cliente[1],))
+            responsavel = cursor.fetchone()
+            conn.close()
+        except Exception as e:
+            responsavel = None
+            print(f"Erro ao buscar responsável: {e}")
+
+        if responsavel:
+            ctk.CTkLabel(frame, text="👨‍👩‍👧 Responsável pelo Cliente", font=("Arial", 16, "bold")).grid(row=13,
+                                                                                                        column=0,
+                                                                                                        columnspan=2,
+                                                                                                        pady=(20, 10))
+            campos_resp = ["Nome", "Telefone", "Parentesco"]
+            for i, dado in enumerate(responsavel, start=14):
+                ctk.CTkLabel(frame, text=f"{campos_resp[i - 14]}:", font=("Arial", 14, "bold")).grid(row=i, column=0,
+                                                                                                     padx=10, pady=5,
+                                                                                                     sticky="e")
+                ctk.CTkLabel(frame, text=dado, font=("Arial", 14)).grid(row=i, column=1, padx=10, pady=5, sticky="w")
+
+    def buscar_cliente_por_cpf(self):
+        cpf = self.cpf_var.get().strip()
+        if not cpf:
+            messagebox.showwarning("CPF vazio", "Por favor, digite um CPF.")
+            return
+
+        try:
+            conn, cursor = conectar_mysql()
+            cursor.execute("""
+                           SELECT nome,
+                                  cpf,
+                                  celular,
+                                  responsavel,
+                                  endereco,
+                                  frequencia,
+                                  escolaridade,
+                                  atendido,
+                                  restricao,
+                                  encarregado,
+                                  sexo
+                           FROM pessoas
+                           WHERE cpf = %s
+                           """, (cpf,))
+            cliente = cursor.fetchone()
+            conn.close()
+
+            if not cliente:
+                messagebox.showinfo("Não encontrado", f"Nenhum cliente com o CPF {cpf} foi encontrado.")
+                return
+
+            self.exibir_detalhes_cliente(cliente)
+
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao buscar cliente: {e}")

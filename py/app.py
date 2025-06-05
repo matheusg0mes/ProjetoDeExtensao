@@ -3,6 +3,9 @@ from cadastro_cliente import JanelaCadastroCliente
 from visualizar_cliente import JanelaVisualizarClientes
 from cadastro_funcionario import JanelaCadastroFuncionario
 from visualizar_funcionario import JanelaVisualizarFuncionarios
+from dashboard import JanelaDashboard
+from agendar_reuniao import JanelaAgendarReuniao
+from cadastro_responsavel import JanelaCadastroResponsavel
 
 # Configurações iniciais
 ctk.set_appearance_mode("light")
@@ -45,10 +48,13 @@ class JanelaPrincipal(ctk.CTk):
 
         # Botões do menu lateral
         self.abas = {
+            "Dashboard": self.abrir_dashboard,
             "Cadastrar Cliente": self.abrir_cadastro_cliente,
             "Visualizar Cliente": self.abrir_visualizar_cliente,
             "Cadastrar Funcionário": self.abrir_cadastro_funcionario,
-            "Visualizar Funcionário": self.abrir_visualizar_funcionario
+            "Visualizar Funcionário": self.abrir_visualizar_funcionario,
+            "Agendar Reunião": self.abrir_agendar_reuniao,
+            "Cadastrar Responsável": self.abrir_cadastro_responsavel
         }
 
         for texto, comando in self.abas.items():
@@ -87,6 +93,21 @@ class JanelaPrincipal(ctk.CTk):
     def limpar_frame(self):
         for widget in self.conteudo_frame.winfo_children():
             widget.destroy()
+
+    def abrir_dashboard(self):
+        self.titulo_aba.configure(text="Dashboard")
+        self.limpar_frame()
+        JanelaDashboard(self.conteudo_frame)
+
+    def abrir_agendar_reuniao(self):
+        self.titulo_aba.configure(text="Agendar Reunião")
+        self.limpar_frame()
+        JanelaAgendarReuniao(self.conteudo_frame)
+
+    def abrir_cadastro_responsavel(self):
+        self.titulo_aba.configure(text="Cadastrar Responsável")
+        self.limpar_frame()
+        JanelaCadastroResponsavel(self.conteudo_frame)
 
 if __name__ == "__main__":
     app = JanelaPrincipal()
